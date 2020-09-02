@@ -497,7 +497,6 @@ class Widget_Image_Carousel extends Widget_Base {
 					'px' => [
 						'min' => 0,
 						'max' => 100,
-				],
 			]
 		);
 
@@ -505,20 +504,6 @@ class Widget_Image_Carousel extends Widget_Base {
 			'dots_color',
 			[
 				'label' => __( 'Color', 'elementor' ),
-				'type' => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
-				],
-				'condition' => [
-					'navigation' => [ 'dots', 'both' ],
-				],
-			]
-		);
-
-		$this->add_control(
-			'active_dots_color',
-			[
-				'label' => __( 'Active Color', 'elementor' ),
 				'type' => Controls_Manager::COLOR,
 				'selectors' => [
 					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
