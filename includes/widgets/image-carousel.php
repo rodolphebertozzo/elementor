@@ -497,7 +497,8 @@ class Widget_Image_Carousel extends Widget_Base {
 					'px' => [
 						'min' => 0,
 						'max' => 100,
-			]
+				],
+			],
 		);
 
 		$this->add_control(
