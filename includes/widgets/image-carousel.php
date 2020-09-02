@@ -510,7 +510,7 @@ class Widget_Image_Carousel extends Widget_Base {
 					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
 				],
 				'condition' => [
-					'navigation' => [ 'dots', ],
+					'navigation' => [ 'dots' ],
 				],
 			]
 		);
