@@ -497,8 +497,8 @@ class Widget_Image_Carousel extends Widget_Base {
 					'px' => [
 						'min' => 0,
 						'max' => 100,
-					],
 				],
+			]
 		);
 
 		$this->add_control(
@@ -510,7 +510,7 @@ class Widget_Image_Carousel extends Widget_Base {
 					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
 				],
 				'condition' => [
-					'navigation' => [ 'dots' ],
+					'navigation' => [ 'dots', 'both' ],
 				],
 			]
 		);
@@ -524,7 +524,7 @@ class Widget_Image_Carousel extends Widget_Base {
 					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
 				],
 				'condition' => [
-					'navigation' => [ 'both' ],
+					'navigation' => [ 'dots', 'both' ],
 				],
 			]
 		);
