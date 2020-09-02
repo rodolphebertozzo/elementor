@@ -488,6 +488,19 @@ class Widget_Image_Carousel extends Widget_Base {
 			]
 		);
 
+		$this->add_responsive_control(
+			'dots_gap',
+			[
+				'label' => __( 'Gap', 'elementor' ),
+				'type' => Controls_Manager::SLIDER,
+				'range' => [
+					'px' => [
+						'min' => 0,
+						'max' => 100,
+					],
+				],
+		);
+
 		$this->add_control(
 			'dots_color',
 			[
@@ -497,7 +510,21 @@ class Widget_Image_Carousel extends Widget_Base {
 					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
 				],
 				'condition' => [
-					'navigation' => [ 'dots', 'both' ],
+					'navigation' => [ 'dots', ],
+				],
+			]
+		);
+
+		$this->add_control(
+			'active_dots_color',
+			[
+				'label' => __( 'Active Color', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .swiper-pagination-bullet' => 'background: {{VALUE}};',
+				],
+				'condition' => [
+					'navigation' => [ 'both' ],
 				],
 			]
 		);
