@@ -495,12 +495,12 @@ class Widget_Image_Carousel extends Widget_Base {
 				'type' => Controls_Manager::SLIDER,
 				'separator' => 'before',
 				'default' => [
-					'size' => 10,
+					'size' => 5,
 				],
 				'range' => [
 					'px' => [
 						'min' => 0,
-						'max' => 100,
+						'max' => 10,
 				],
 			]
 		);
