@@ -487,18 +487,22 @@ class Widget_Image_Carousel extends Widget_Base {
 				],
 			]
 		);
-
+		
 		$this->add_responsive_control(
-			'dots_gap',
+			'dots_spacing',
 			[
-				'label' => __( 'Gap', 'elementor' ),
+				'label' => __( 'Space Between', 'elementor' ),
 				'type' => Controls_Manager::SLIDER,
+				'separator' => 'before',
+				'default' => [
+					'size' => 10,
+				],
 				'range' => [
 					'px' => [
 						'min' => 0,
 						'max' => 100,
-					],
 				],
+			]
 		);
 
 		$this->add_control(
