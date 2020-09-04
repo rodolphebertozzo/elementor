@@ -294,6 +294,28 @@ class Widget_Progress extends Widget_Base {
 		$this->end_controls_section();
 	}
 
+	protected function _register_controls() {
+		$this->start_controls_section(
+			'section_progress',
+			[
+				'label' => __( 'Progress Circle', 'elementor' ),
+			]
+		);
+
+		$this->add_control(
+			'title',
+			[
+				'label' => __( 'Title', 'elementor' ),
+				'type' => Controls_Manager::TEXT,
+				'dynamic' => [
+					'active' => true,
+				],
+				'placeholder' => __( 'Enter your title', 'elementor' ),
+				'default' => __( 'My Skill', 'elementor' ),
+				'label_block' => true,
+			]
+		);
+	}
 	/**
 	 * Render progress widget output on the frontend.
 	 * Make sure value does no exceed 100%.
