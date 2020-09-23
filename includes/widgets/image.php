@@ -228,6 +228,17 @@ class Widget_Image extends Widget_Base {
 				],
 			]
 		);
+		
+		$this->add_control(
+			'lazyload',
+			[
+				'type' => Controls_Manager::SWITCHER,
+				'label' => __( 'Lazy Load', 'elementor' ),
+				'return_value' => 'yes',
+				'default' => 'yes',
+				'frontend_available' => true,
+			]
+		);
 
 		$this->add_control(
 			'view',
