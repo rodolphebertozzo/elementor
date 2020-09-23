@@ -486,6 +486,17 @@ class Element_Section extends Element_Base {
 				'separator' => 'before',
 			]
 		);
+		
+		$this->add_control(
+			'lazyload',
+			[
+				'type' => Controls_Manager::SWITCHER,
+				'label' => __( 'Lazy Load', 'elementor' ),
+				'return_value' => 'yes',
+				'default' => 'yes',
+				'frontend_available' => true,
+			]
+		);
 
 		$this->end_controls_section();
 
