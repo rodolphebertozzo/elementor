@@ -233,7 +233,11 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 		
-		$this->start_controls_tab();
+		$this->start_controls_tab( 'hover',
+			[
+				'label' => __( 'Hover', 'elementor' ),
+			]
+		);
 
 		$this->add_control(
 			'border_color_hover',
