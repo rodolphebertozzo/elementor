@@ -262,6 +262,14 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'hover_animation',
+			[
+				'label' => __( 'Hover Animation', 'elementor' ),
+				'type' => Controls_Manager::HOVER_ANIMATION,
+			]
+		);
+
 		$this->end_controls_tab();
 
 		$this->add_control(
