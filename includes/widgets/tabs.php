@@ -238,6 +238,8 @@ class Widget_Tabs extends Widget_Base {
 				],
 			]
 		);
+		
+		$this->end_controls_tab();
 
 		$this->start_controls_tab( 'hover',
 			[
@@ -268,7 +270,6 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 
-		$this->end_controls_tab();
 		$this->end_controls_tab();
 
 		$this->add_control(
