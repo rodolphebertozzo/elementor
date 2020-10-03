@@ -211,6 +211,7 @@ class Widget_Tabs extends Widget_Base {
 		);
 
 		$this->start_controls_tab( 'normal',
+			'tab_tabs_normal',
 			[
 				'label' => __( 'Normal', 'elementor' ),
 			]
@@ -242,7 +243,7 @@ class Widget_Tabs extends Widget_Base {
 		$this->end_controls_tab();
 
 		$this->start_controls_tab(
-			'tab_button_hover',
+			'tab_tabs_hover',
 			[
 				'label' => __( 'Hover', 'elementor' ),
 			]
