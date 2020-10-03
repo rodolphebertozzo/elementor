@@ -210,7 +210,7 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 
-		$this->start_controls_tab( 'normal',
+		$this->start_controls_tab(
 			'tab_tabs_normal',
 			[
 				'label' => __( 'Normal', 'elementor' ),
