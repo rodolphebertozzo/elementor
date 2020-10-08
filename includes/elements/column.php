@@ -130,8 +130,14 @@ class Element_Column extends Element_Base {
 			[
 				'label' => __( 'Column Width', 'elementor' ) . ' (%)',
 				'type' => Controls_Manager::NUMBER,
-				'min' => 2,
-				'max' => 98,
+				'size_units' => [ 'px', '%', 'em', 'rem' ],
+					'range' => [
+					'%' => [
+						'min' => 2,
+						'max' => 98,
+					],
+				],
+
 				'required' => true,
 				'device_args' => [
 					Controls_Stack::RESPONSIVE_TABLET => [
