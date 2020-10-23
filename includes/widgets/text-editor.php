@@ -174,7 +174,7 @@ class Widget_Text_Editor extends Widget_Base {
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
-					'{{WRAPPER}}' => 'color-flyover: {{VALUE}};',
+					'{{WRAPPER}}' => 'color: {{VALUE}};',
 				],
 				'scheme' => [
 					'type' => Schemes\Color::get_type(),
@@ -190,7 +190,7 @@ class Widget_Text_Editor extends Widget_Base {
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
-					'{{WRAPPER}}' => 'color: {{VALUE}};',
+					'{{WRAPPER}}' => 'color-flyover: {{VALUE}};',
 				],
 				'scheme' => [
 					'type' => Schemes\Color::get_type(),
