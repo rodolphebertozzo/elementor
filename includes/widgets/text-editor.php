@@ -174,6 +174,22 @@ class Widget_Text_Editor extends Widget_Base {
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
+					'{{WRAPPER}}' => 'color-flyover: {{VALUE}};',
+				],
+				'scheme' => [
+					'type' => Schemes\Color::get_type(),
+					'value' => Schemes\Color::COLOR_3,
+				],
+			]
+		);
+		
+		$this->add_control(
+			'text_color_flyover',
+			[
+				'label' => __( 'Text Color Flyover', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '',
+				'selectors' => [
 					'{{WRAPPER}}' => 'color: {{VALUE}};',
 				],
 				'scheme' => [
