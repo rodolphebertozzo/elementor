@@ -190,7 +190,8 @@ class Widget_Text_Editor extends Widget_Base {
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
-					'{{WRAPPER}}' => 'color-flyover: {{VALUE}};',
+					'{{WRAPPER}} a.elementor-text-editor:hover, {{WRAPPER}} .elementor-text-editor:hover, {{WRAPPER}} a.elementor-text-editor:focus, {{WRAPPER}} .elementor-text-editor:focus' => 'color: {{VALUE}};',
+					'{{WRAPPER}} a.elementor-text-editor:hover svg, {{WRAPPER}} .elementor-text-editor:hover svg, {{WRAPPER}} a.elementor-text-eidtor:focus svg, {{WRAPPER}} .elementor-text-editor:focus svg' => 'fill: {{VALUE}};',
 				],
 				'scheme' => [
 					'type' => Schemes\Color::get_type(),
