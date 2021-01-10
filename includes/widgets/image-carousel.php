@@ -502,6 +502,8 @@ class Widget_Image_Carousel extends Widget_Base {
 						'min' => 0,
 						'max' => 10,
 				],
+				'selectors' => [
+					'{{WRAPPER}} .swiper-dots-spacing' => '{{SIZE}}{{UNIT}};',
 			]
 		);
 
