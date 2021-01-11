@@ -564,7 +564,7 @@ class Widget_Image_Carousel extends Widget_Base {
 					],
 				],
 				'selectors' => [
-					'{{WRAPPER}} .elementor-image img' => 'width: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .elementor-image-carousel img' => 'width: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -595,7 +595,7 @@ class Widget_Image_Carousel extends Widget_Base {
 					],
 				],
 				'selectors' => [
-					'{{WRAPPER}} .elementor-image img' => 'height: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .elementor-image-carousel img' => 'height: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
