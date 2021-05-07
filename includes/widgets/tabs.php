@@ -221,6 +221,29 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'html_tag',
+			[
+				'label' => __( 'HTML Tag', 'elementor' ),
+				'type' => Controls_Manager::SELECT,
+				'condition' => [
+					'look' => 'tab_title',
+				],
+				'options' => [
+					'h1' => 'H1',
+					'h2' => 'H2',
+					'h3' => 'H3',
+					'h4' => 'H4',
+					'h5' => 'H5',
+					'h6' => 'H6',
+					'div' => 'div',
+					'span' => 'span',
+					'p' => 'p',
+				],
+				'default' => 'span',
+			]
+		);
+
 		$this->end_controls_section();
 
 		$this->start_controls_section(
