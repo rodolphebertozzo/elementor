@@ -491,22 +491,22 @@ class Widget_Image_Carousel extends Widget_Base {
 		$this->add_responsive_control(
 			'dots_spacing',
 			[
-				'label' => __( 'Space Between', 'elementor' ),
-				'type' => Controls_Manager::SLIDER,
-				'separator' => 'before',
-				'default' => [
-					'size' => 5,
-				],
-				'range' => [
-					'px' => [
-						'min' => 0,
-						'max' => 10,
-				],
-				'selectors' => [
-					'body:not(.rtl) {{WRAPPER}} .elementor-pagination .page-numbers:not(:first-child)' => 'margin-left: calc( {{SIZE}}{{UNIT}}/2 );',
-					'body:not(.rtl) {{WRAPPER}} .elementor-pagination .page-numbers:not(:last-child)' => 'margin-right: calc( {{SIZE}}{{UNIT}}/2 );',
-					'body.rtl {{WRAPPER}} .elementor-pagination .page-numbers:not(:first-child)' => 'margin-right: calc( {{SIZE}}{{UNIT}}/2 );',
-					'body.rtl {{WRAPPER}} .elementor-pagination .page-numbers:not(:last-child)' => 'margin-left: calc( {{SIZE}}{{UNIT}}/2 );',
+			'label' => __( 'Space Between', 'elementor' ),
+			'type' => Controls_Manager::SLIDER,
+			'separator' => 'before',
+			'default' => [
+				'size' => 5,
+			],
+			'range' => [
+				'px' => [
+					'min' => 0,
+					'max' => 10,
+			],
+			'selectors' => [
+				'body:not(.rtl) {{WRAPPER}} .elementor-pagination .page-numbers:not(:first-child)' => 'margin-left: calc( {{SIZE}}{{UNIT}}/2 );',
+				'body:not(.rtl) {{WRAPPER}} .elementor-pagination .page-numbers:not(:last-child)' => 'margin-right: calc( {{SIZE}}{{UNIT}}/2 );',
+				'body.rtl {{WRAPPER}} .elementor-pagination .page-numbers:not(:first-child)' => 'margin-right: calc( {{SIZE}}{{UNIT}}/2 );',
+				'body.rtl {{WRAPPER}} .elementor-pagination .page-numbers:not(:last-child)' => 'margin-left: calc( {{SIZE}}{{UNIT}}/2 );',
 				],
 			]
 		);
