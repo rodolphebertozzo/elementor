@@ -617,7 +617,7 @@ class Widget_Image_Carousel extends Widget_Base {
 				],
 			]
 		);
-
+	
 		$this->add_responsive_control(
 			'gallery_vertical_align',
 			[
