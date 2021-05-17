@@ -210,6 +210,13 @@ class Widget_Tabs extends Widget_Base {
 			]
 		);
 
+		$this->start_controls_tab(
+			'tab_tabs_normal',
+			[
+				'label' => __( 'Normal', 'elementor' ),
+			]
+		);
+
 		$this->add_control(
 			'border_color',
 			[
@@ -232,6 +239,41 @@ class Widget_Tabs extends Widget_Base {
 				],
 			]
 		);
+		
+		$this->end_controls_tab();
+
+		$this->start_controls_tab(
+			'tab_tabs_hover',
+			[
+				'label' => __( 'Hover', 'elementor' ),
+			]
+		);
+
+		$this->add_control(
+			'border_color_hover',
+			[
+				'label' => __( 'Border Color', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .elementor-tabs:hover, {{WRAPPER}} .elementor-tabs:focus' => 'border-color: {{VALUE}};',
+				],
+			]
+		);
+
+		$this->add_control(
+			'background_color_hover',
+			[
+				'label' => __( 'Background Color', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .elementor-tabs:hover, {{WRAPPER}} .elementor-tabs:focus' => 'background-color: {{VALUE}};',				
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->end_controls_tabs();
 
 		$this->add_control(
 			'heading_title',
