@@ -1,13 +1,20 @@
-import History from '../../commands/base/history';
+import CommandHistory from 'elementor-document/commands/base/command-history';
 
-export class PasteStyle extends History {
+export class PasteStyle extends CommandHistory {
 	validateArgs( args ) {
 		this.requireContainer( args );
+
+		// Validate if storage have data.
+		const { storageKey = 'clipboard' } = args,
+			storageData = elementorCommon.storage.get( storageKey );
+
+		this.requireArgumentType( 'storageData', 'object', { storageData } );
 	}
 
 	validateControls( source, target ) {
 		let result = true;
 
+		// Cannot use `_.isEmpty()` does not pass paste style test.
 		if (
 			null === source ||
 			null === target ||
@@ -34,14 +41,32 @@ export class PasteStyle extends History {
 		const { containers = [ args.container ], storageKey = 'clipboard' } = args,
 			storageData = elementorCommon.storage.get( storageKey );
 
+		this.applyPasteStyleData( containers, storageData );
+	}
+
+	applyPasteStyleData( containers, data ) {
 		containers.forEach( ( targetContainer ) => {
 			const targetSettings = targetContainer.settings,
 				targetSettingsAttributes = targetSettings.attributes,
 				targetControls = targetSettings.controls,
-				diffSettings = {};
+				diffSettings = {},
+				addExtraControls = ( sourceSettings, extraType ) => {
+					if ( sourceSettings[ extraType ] ) {
+						Object.entries( sourceSettings[ extraType ] ).forEach( ( [ controlName, value ] ) => {
+							const control = targetControls[ controlName ];
+							if ( targetContainer.view.isStyleTransferControl( control ) ) {
+								diffSettings[ extraType ] = diffSettings[ extraType ] || {};
+								diffSettings[ extraType ][ controlName ] = value;
+							}
+						} );
+					}
+				};
 
-			storageData.forEach( ( sourceModel ) => {
+			data.forEach( ( sourceModel ) => {
 				const sourceSettings = sourceModel.settings;
+
+				addExtraControls( sourceSettings, '__globals__' );
+				addExtraControls( sourceSettings, '__dynamic__' );
 
 				Object.entries( targetControls ).forEach( ( [ controlName, control ] ) => {
 					if ( ! targetContainer.view.isStyleTransferControl( control ) ) {
@@ -75,26 +100,45 @@ export class PasteStyle extends History {
 					diffSettings[ controlName ] = controlSourceValue;
 				} );
 
-				// Moved from `editor/elements/views/base.js` `pasteStyle` function.
-				targetContainer.view.allowRender = false;
-
-				// BC: Deprecated since 2.8.0 - use `$e.events`.
-				elementor.channels.data.trigger( 'element:before:paste:style', targetContainer.model );
-
-				$e.run( 'document/elements/settings', {
-					container: targetContainer,
-					settings: diffSettings,
-					options: { external: true },
-				} );
-
-				// BC: Deprecated since 2.8.0 - use `$e.events`.
-				elementor.channels.data.trigger( 'element:after:paste:style', targetContainer.model );
-
-				targetContainer.view.allowRender = true;
-
-				targetContainer.render();
+				this.pasteStyle( targetContainer, diffSettings );
 			} );
 		} );
+	}
+
+	/**
+	 * @param {Container} targetContainer
+	 * @param {{}} settings
+	 */
+	pasteStyle( targetContainer, settings ) {
+		const globals = settings.__globals__;
+
+		if ( globals ) {
+			delete settings.__globals__;
+		}
+
+		$e.run( 'document/elements/settings', {
+			container: targetContainer,
+			settings: settings,
+			options: {
+				external: true,
+				render: false,
+			},
+		} );
+
+		if ( globals ) {
+			$e.run( 'document/globals/settings', {
+				container: targetContainer,
+				settings: globals,
+				options: {
+					external: true,
+					render: false,
+				},
+			} );
+
+			targetContainer.panel.refresh();
+		}
+
+		targetContainer.render();
 	}
 }
 

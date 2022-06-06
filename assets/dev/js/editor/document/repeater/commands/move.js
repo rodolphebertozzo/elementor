@@ -1,6 +1,6 @@
-import History from '../../commands/base/history';
+import CommandHistory from 'elementor-document/commands/base/command-history';
 
-export class Move extends History {
+export class Move extends CommandHistory {
 	validateArgs( args ) {
 		this.requireContainer( args );
 
@@ -15,7 +15,7 @@ export class Move extends History {
 		return {
 			containers,
 			type: 'move',
-			subTitle: elementor.translate( 'Item' ),
+			subTitle: __( 'Item', 'elementor' ),
 		};
 	}
 

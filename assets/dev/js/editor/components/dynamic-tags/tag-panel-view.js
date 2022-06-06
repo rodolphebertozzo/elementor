@@ -57,6 +57,9 @@ module.exports = Marionette.ItemView.extend( {
 				of: this.$el,
 				autoRefresh: true,
 			},
+			hide: {
+				ignore: '.select2-container',
+			},
 		};
 
 		var settingsPopup = elementorCommon.dialogsManager.createWidget( 'buttons', settingsPopupOptions );
@@ -131,6 +134,10 @@ module.exports = Marionette.ItemView.extend( {
 	onDestroy: function() {
 		if ( this.hasSettings() ) {
 			this.getSettingsPopup().destroy();
+		}
+
+		if ( this.tagControlsStack ) {
+			this.tagControlsStack.destroy();
 		}
 	},
 } );

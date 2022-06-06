@@ -36,7 +36,7 @@ abstract class Tag extends Base_Tag {
 
 		$value = ob_get_clean();
 
-		if ( $value ) {
+		if ( ! Utils::is_empty( $value ) ) {
 			// TODO: fix spaces in `before`/`after` if WRAPPED_TAG ( conflicted with .elementor-tag { display: inline-flex; } );
 			if ( ! Utils::is_empty( $settings, 'before' ) ) {
 				$value = wp_kses_post( $settings['before'] ) . $value;
@@ -85,28 +85,28 @@ abstract class Tag extends Base_Tag {
 		$this->start_controls_section(
 			'advanced',
 			[
-				'label' => __( 'Advanced', 'elementor' ),
+				'label' => esc_html__( 'Advanced', 'elementor' ),
 			]
 		);
 
 		$this->add_control(
 			'before',
 			[
-				'label' => __( 'Before', 'elementor' ),
+				'label' => esc_html__( 'Before', 'elementor' ),
 			]
 		);
 
 		$this->add_control(
 			'after',
 			[
-				'label' => __( 'After', 'elementor' ),
+				'label' => esc_html__( 'After', 'elementor' ),
 			]
 		);
 
 		$this->add_control(
 			'fallback',
 			[
-				'label' => __( 'Fallback', 'elementor' ),
+				'label' => esc_html__( 'Fallback', 'elementor' ),
 			]
 		);
 

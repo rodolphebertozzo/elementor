@@ -1,7 +1,21 @@
+let isDebug = false;
+
+if ( process.argv[ process.argv.length - 1 ] ) {
+	const gruntParams = process.argv[ process.argv.length - 1 ].split( ':' );
+
+	if ( gruntParams ) {
+		if ( 'karma' === gruntParams[ 0 ] ) {
+			if ( 'debug' === gruntParams[ 1 ] ) {
+				isDebug = true;
+			}
+		}
+	}
+}
+
 module.exports = function( config ) {
-	config.set( {
+	const karmaConfig = {
 		basePath: './',
-		frameworks: [ 'qunit', 'fixture' ],
+		frameworks: [ 'qunit' ],
 		files: [
 			{
 				pattern: 'assets/js/**/*.js.map',
@@ -12,24 +26,29 @@ module.exports = function( config ) {
 			'tests/qunit/vendor/wp-includes/jquery.js',
 			'tests/qunit/vendor/wp-includes/underscore.min.js',
 			'tests/qunit/vendor/wp-includes/backbone.min.js',
+			'tests/qunit/vendor/wp-includes/react.min.js',
+			'tests/qunit/vendor/wp-includes/react-dom.min.js',
+			'tests/qunit/vendor/wp-includes/i18n.min.js',
 			'assets/lib/backbone/backbone.marionette.min.js',
 			'assets/lib/backbone/backbone.radio.min.js',
 
 			// Elementor Common.
-			'tests/qunit/setup-elementor-common.js',
+			'tests/qunit/setup/elementor-common.js',
+			'tests/qunit/setup/web-cli.js',
 			'assets/lib/dialog/dialog.js',
 			'assets/js/common-modules.js',
+			'assets/js/web-cli.js',
 			'assets/js/common.js',
 
 			// Editor Fixtures.
 			'tests/qunit/index.html',
 
 			// Editor Tinymce.
-			'tests/qunit/setup-tinymce.js',
+			'tests/qunit/setup/tinymce.js',
 			'tests/qunit/vendor/wp-includes/quicktags.min.js',
 
 			// Editor Config.
-			'tests/qunit/setup-editor.js',
+			'tests/qunit/setup/editor.js',
 
 			// Editor Dependencies.
 			'tests/qunit/vendor/wp-includes/jquery-ui.min.js',
@@ -77,6 +96,8 @@ module.exports = function( config ) {
 		colors: true,
 		logLevel: config.LOG_INFO,
 		browsers: [ 'ChromeHeadless' ],
+		browserDisconnectTimeout: 6000,
+		pingTimeout: 10000,
 		// Continuous Integration mode
 		// if true, Karma captures browsers, runs the tests and exits
 		singleRun: true,
@@ -85,9 +106,25 @@ module.exports = function( config ) {
 		client: {
 			clearContext: true,
 			qunit: {
+				isDebug,
 				showUI: false,
+				validateContainersAlive: true, // Validate all containers are alive recursively after each test done.
 				testTimeout: 5000,
 			},
 		},
-	} );
+	};
+
+	if ( isDebug ) {
+		const fs = require( 'fs' );
+
+		if ( fs.existsSync( '../elementor-dev-tools' ) ) {
+			const last = karmaConfig.files.pop();
+
+			karmaConfig.files.push( { pattern: '../elementor-dev-tools/assets/js/editor.js', type: 'module' } );
+
+			karmaConfig.files.push( last );
+		}
+	}
+
+	config.set( karmaConfig );
 };

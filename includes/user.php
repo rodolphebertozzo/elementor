@@ -103,7 +103,7 @@ class User {
 			return false;
 		}
 
-		if ( get_option( 'page_for_posts' ) === $post_id ) {
+		if ( intval( get_option( 'page_for_posts' ) ) === $post_id ) {
 			return false;
 		}
 
@@ -261,11 +261,11 @@ class User {
 			]
 		);
 
-		$body = wp_remote_retrieve_body( $response );
+		$response_code = (int) wp_remote_retrieve_response_code( $response );
 
-		if ( 'success' === $body ) {
+		if ( 200 === $response_code ) {
 			self::set_introduction_viewed( [
-				'introductionKey' => 'beta_tester_signup',
+				'introductionKey' => Beta_Testers::BETA_TESTER_SIGNUP,
 			] );
 		}
 	}
@@ -290,5 +290,20 @@ class User {
 		}
 
 		return $user_introduction_meta;
+	}
+
+	/**
+	 * Get a user option with default value as fallback.
+	 *
+	 * @param string $option  - Option key.
+	 * @param int    $user_id - User ID
+	 * @param mixed  $default - Default fallback value.
+	 *
+	 * @return mixed
+	 */
+	public static function get_user_option_with_default( $option, $user_id, $default ) {
+		$value = get_user_option( $option, $user_id );
+
+		return ( false === $value ) ? $default : $value;
 	}
 }

@@ -6,15 +6,6 @@ module.exports = Marionette.Behavior.extend( {
 
 	listenerAttached: false,
 
-	ui: {
-		tagArea: '.elementor-control-tag-area',
-		dynamicSwitcher: '.elementor-control-dynamic-switcher',
-	},
-
-	events: {
-		'click @ui.dynamicSwitcher': 'onDynamicSwitcherClick',
-	},
-
 	initialize: function() {
 		if ( ! this.listenerAttached ) {
 			this.listenTo( this.view.options.container.settings, 'change:external:__dynamic__', this.onAfterExternalChange );
@@ -23,25 +14,49 @@ module.exports = Marionette.Behavior.extend( {
 	},
 
 	renderTools: function() {
-		if ( this.getOption( 'dynamicSettings' ).default ) {
+		// If the user has Elementor Pro and the current control has no dynamic tags available, don't generate the dynamic switcher.
+		// If the user has the core version only, we do display the dynamic switcher for the promotion.
+		if ( this.getOption( 'dynamicSettings' ).default || ( elementor.helpers.hasPro() && ! this.getOption( 'tags' ).length ) ) {
 			return;
 		}
 
-		var $dynamicSwitcher = jQuery( Marionette.Renderer.render( '#tmpl-elementor-control-dynamic-switcher' ) );
+		const $dynamicSwitcher = jQuery( Marionette.Renderer.render( '#tmpl-elementor-control-dynamic-switcher' ) );
 
-		if ( this.view.model.get( 'label_block' ) ) {
-			this.ui.controlTitle.after( $dynamicSwitcher );
+		$dynamicSwitcher.on( 'click', ( event ) => this.onDynamicSwitcherClick( event ) );
 
-			const $responsiveSwitchers = $dynamicSwitcher.next( '.elementor-control-responsive-switchers' );
+		this.$el.find( '.elementor-control-dynamic-switcher-wrapper' ).append( $dynamicSwitcher );
 
-			if ( $responsiveSwitchers.length ) {
-				$responsiveSwitchers.after( $dynamicSwitcher );
+		this.ui.dynamicSwitcher = $dynamicSwitcher;
+
+		if ( 'color' === this.view.model.get( 'type' ) ) {
+			if ( this.view.colorPicker ) {
+				this.moveDynamicSwitcherToColorPicker();
+			} else {
+				setTimeout( () => this.moveDynamicSwitcherToColorPicker() );
 			}
-		} else {
-			this.ui.controlTitle.before( $dynamicSwitcher );
 		}
 
-		this.ui.dynamicSwitcher = this.$el.find( this.ui.dynamicSwitcher.selector );
+		// Add a Tipsy Tooltip to the Dynamic Switcher
+		this.ui.dynamicSwitcher.tipsy( {
+			title() {
+				return this.getAttribute( 'data-tooltip' );
+			},
+			gravity: 's',
+		} );
+	},
+
+	moveDynamicSwitcherToColorPicker: function() {
+		const $colorPickerToolsContainer = this.view.colorPicker.$pickerToolsContainer;
+
+		this.ui.dynamicSwitcher.removeClass( 'elementor-control-unit-1' ).addClass( 'e-control-tool' );
+
+		const $eyedropper = $colorPickerToolsContainer.find( '.elementor-control-element-color-picker' );
+
+		if ( $eyedropper.length ) {
+			this.ui.dynamicSwitcher.insertBefore( $eyedropper );
+		} else {
+			$colorPickerToolsContainer.append( this.ui.dynamicSwitcher );
+		}
 	},
 
 	toggleDynamicClass: function() {
@@ -82,6 +97,15 @@ module.exports = Marionette.Behavior.extend( {
 				$tagsListInner.append( $tag );
 			} );
 		} );
+
+		// Create and inject pro dynamic teaser template if Pro is not installed
+		if ( ! elementor.helpers.hasPro() && Object.keys( tags ).length ) {
+			const proTeaser = Marionette.Renderer.render( '#tmpl-elementor-dynamic-tags-promo', {
+				promotionUrl: elementor.config.dynamicPromotionURL.replace( '%s', this.view.model.get( 'name' ) ),
+			} );
+
+			$tagsListInner.append( proTeaser );
+		}
 
 		$tagsListInner.on( 'click', '.elementor-tags-list__item', this.onTagsListItemClick.bind( this ) );
 
@@ -143,7 +167,7 @@ module.exports = Marionette.Behavior.extend( {
 
 		tagView.render();
 
-		this.ui.tagArea.after( tagView.el );
+		this.$el.find( '.elementor-control-tag-area' ).after( tagView.el );
 
 		this.listenTo( tagView, 'remove', this.onTagViewRemove.bind( this ) );
 	},
@@ -172,6 +196,18 @@ module.exports = Marionette.Behavior.extend( {
 		}
 	},
 
+	showPromotion: function() {
+		const message = __( 'Create more personalized and dynamic sites by populating data from various sources with dozens of dynamic tags to choose from.', 'elementor' );
+
+		elementor.promotion.showDialog( {
+			headerMessage: __( 'Dynamic Content', 'elementor' ),
+			message: message,
+			top: '-10',
+			element: this.ui.dynamicSwitcher,
+			actionURL: elementor.config.dynamicPromotionURL.replace( '%s', this.view.model.get( 'name' ) ),
+		} );
+	},
+
 	onRender: function() {
 		this.$el.addClass( 'elementor-control-dynamic' );
 
@@ -184,14 +220,25 @@ module.exports = Marionette.Behavior.extend( {
 		}
 	},
 
-	onDynamicSwitcherClick: function() {
-		this.toggleTagsList();
+	onDynamicSwitcherClick: function( event ) {
+		event.stopPropagation();
+
+		if ( this.getOption( 'tags' ).length ) {
+			this.toggleTagsList();
+		} else {
+			this.showPromotion();
+		}
 	},
 
 	onTagsListItemClick: function( event ) {
 		const $tag = jQuery( event.currentTarget );
 
-		this.setTagView( elementor.helpers.getUniqueID(), $tag.data( 'tagName' ), {} );
+		this.setTagView( elementorCommon.helpers.getUniqueId(), $tag.data( 'tagName' ), {} );
+
+		// If an element has an active global value, disable it before applying the dynamic value.
+		if ( this.view.getGlobalKey() ) {
+			this.view.triggerMethod( 'unset:global:value' );
+		}
 
 		if ( this.isDynamicMode() ) {
 			$e.run( 'document/dynamic/settings', {
@@ -241,5 +288,9 @@ module.exports = Marionette.Behavior.extend( {
 
 	onDestroy: function() {
 		this.destroyTagView();
+
+		if ( this.ui.tagsList ) {
+			this.ui.tagsList.remove();
+		}
 	},
 } );

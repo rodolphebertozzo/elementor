@@ -39,12 +39,16 @@ EditorView = ControlsStack.extend( {
 	initialize: function() {
 		ControlsStack.prototype.initialize.apply( this, arguments );
 
-		var panelSettings = this.model.get( 'editSettings' ).get( 'panel' );
+		const editSettings = this.model.get( 'editSettings' );
 
-		if ( panelSettings ) {
-			this.activeTab = panelSettings.activeTab;
+		if ( editSettings ) {
+			const panelSettings = editSettings.get( 'panel' );
 
-			this.activeSection = panelSettings.activeSection;
+			if ( panelSettings ) {
+				this.activeTab = panelSettings.activeTab;
+
+				this.activeSection = panelSettings.activeSection;
+			}
 		}
 	},
 
@@ -66,7 +70,7 @@ EditorView = ControlsStack.extend( {
 	},
 
 	isVisibleSectionControl: function( sectionControlModel ) {
-		return ControlsStack.prototype.isVisibleSectionControl.apply( this, arguments ) && elementor.helpers.isActiveControl( sectionControlModel, this.model.get( 'settings' ).attributes );
+		return ControlsStack.prototype.isVisibleSectionControl.apply( this, arguments ) && elementor.helpers.isActiveControl( sectionControlModel, this.model.get( 'settings' ).attributes, this.model.get( 'settings' ).controls );
 	},
 
 	scrollToEditedElement: function() {
@@ -74,23 +78,9 @@ EditorView = ControlsStack.extend( {
 	},
 
 	onDestroy: function() {
-		var editedElementView = this.getOption( 'editedElementView' );
-
-		if ( editedElementView ) {
-			editedElementView.$el.removeClass( 'elementor-element-editable' );
-		}
-
 		this.model.trigger( 'editor:close' );
 
 		this.triggerMethod( 'editor:destroy' );
-	},
-
-	onRender: function() {
-		var editedElementView = this.getOption( 'editedElementView' );
-
-		if ( editedElementView ) {
-			editedElementView.$el.addClass( 'elementor-element-editable' );
-		}
 	},
 
 	onDeviceModeChange: function() {

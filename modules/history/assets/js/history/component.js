@@ -1,15 +1,13 @@
-import BaseComponent from 'elementor-common/components/component';
+import ComponentBase from 'elementor-api/modules/component-base';
+import * as commands from 'elementor-document/history/commands/';
 
-export default class Component extends BaseComponent {
+export default class Component extends ComponentBase {
 	getNamespace() {
 		return 'panel/history/actions';
 	}
 
 	defaultCommands() {
-		return {
-			undo: () => $e.run( 'document/history/undo' ),
-			redo: () => $e.run( 'document/history/redo' ),
-		};
+		return this.importCommands( commands );
 	}
 
 	defaultShortcuts() {

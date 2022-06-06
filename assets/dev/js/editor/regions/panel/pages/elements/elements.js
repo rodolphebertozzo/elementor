@@ -62,24 +62,21 @@ PanelElementsLayoutView = Marionette.LayoutView.extend( {
 	},
 
 	initElementsCollection: function() {
-		var elementsCollection = new PanelElementsElementsCollection(),
-			sectionConfig = elementor.config.elements.section;
-
-		elementsCollection.add( {
-			title: elementor.translate( 'inner_section' ),
-			elType: 'section',
-			categories: [ 'basic' ],
-			keywords: [ 'row', 'columns', 'nested' ],
-			icon: sectionConfig.icon,
-		} );
+		const elementsCollection = new PanelElementsElementsCollection(),
+			isContainerActive = elementorCommon.config.experimentalFeatures.container;
 
 		// TODO: Change the array from server syntax, and no need each loop for initialize
-		_.each( elementor.config.widgets, function( widget ) {
+		_.each( elementor.widgetsCache, function( widget ) {
 			if ( elementor.config.document.panel.widgets_settings[ widget.widget_type ] ) {
 				widget = _.extend( widget, elementor.config.document.panel.widgets_settings[ widget.widget_type ] );
 			}
 
 			if ( ! widget.show_in_panel ) {
+				return;
+			}
+
+			// Don't register the `Inner Section` if the Container experiment is enabled.
+			if ( 'inner-section' === widget.name && isContainerActive ) {
 				return;
 			}
 
@@ -91,6 +88,18 @@ PanelElementsLayoutView = Marionette.LayoutView.extend( {
 				icon: widget.icon,
 				widgetType: widget.widget_type,
 				custom: widget.custom,
+				editable: widget.editable,
+				hideOnSearch: widget.hide_on_search,
+			} );
+		} );
+
+		jQuery.each( elementor.config.promotionWidgets, ( index, widget ) => {
+			elementsCollection.add( {
+				name: widget.name,
+				title: widget.title,
+				icon: widget.icon,
+				categories: JSON.parse( widget.categories ),
+				editable: false,
 			} );
 		} );
 
@@ -113,10 +122,6 @@ PanelElementsLayoutView = Marionette.LayoutView.extend( {
 		var categoriesCollection = new PanelElementsCategoriesCollection();
 
 		_.each( elementor.config.document.panel.elements_categories, function( categoryConfig, categoryName ) {
-			if ( ! categories[ categoryName ] ) {
-				return;
-			}
-
 			// Set defaults.
 			if ( 'undefined' === typeof categoryConfig.active ) {
 				categoryConfig.active = true;
@@ -131,6 +136,10 @@ PanelElementsLayoutView = Marionette.LayoutView.extend( {
 				title: categoryConfig.title,
 				icon: categoryConfig.icon,
 				defaultActive: categoryConfig.active,
+				sort: categoryConfig.sort,
+				hideIfEmpty: undefined !== categoryConfig.hideIfEmpty ?
+					categoryConfig.hideIfEmpty :
+					true,
 				items: categories[ categoryName ],
 			} );
 		} );

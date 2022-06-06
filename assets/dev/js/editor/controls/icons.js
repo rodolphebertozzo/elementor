@@ -1,3 +1,5 @@
+import FilesUploadHandler from '../utils/files-upload-handler';
+
 const ControlMultipleBaseItemView = require( 'elementor-controls/base-multiple' );
 
 class ControlIconsView extends ControlMultipleBaseItemView {
@@ -45,6 +47,7 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 		ui.deleteButton = 'media' === skin ? '.elementor-control-media__remove' : '.elementor-control-icons--inline__none';
 		ui.previewPlaceholder = '.elementor-control-media__preview';
 		ui.previewContainer = '.elementor-control-preview-area';
+		ui.inlineIconContainer = '.elementor-control-inline-icon';
 		ui.inlineDisplayedIcon = '.elementor-control-icons--inline__displayed-icon';
 		ui.radioInputs = '[type="radio"]';
 
@@ -104,7 +107,7 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 	}
 
 	isMigrationAllowed() {
-		return ! ElementorConfig[ 'icons_update_needed' ];
+		return ! elementor.config[ 'icons_update_needed' ];
 	}
 
 	getValueToMigrate() {
@@ -124,16 +127,21 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 	onReady() {
 		// is migration allowed from fa4
 		if ( ! this.isMigrationAllowed() ) {
-			this.ui.previewContainer[ 0 ].addEventListener( 'click', ( event ) => {
+			const migrationPopupTrigger = 'media' === this.model.get( 'skin' ) ? this.ui.previewContainer[ 0 ] : this.ui.inlineIconContainer[ 0 ];
+
+			migrationPopupTrigger.addEventListener( 'click', ( event ) => {
+				// Prevent default to prevent marking the inline icons as selected on click when migration is not allowed
+				event.preventDefault();
 				event.stopPropagation();
+
 				const onConfirm = () => {
-					window.location.href = ElementorConfig.tools_page_link + '&redirect_to=' + encodeURIComponent( document.location.href ) + '#tab-fontawesome4_migration';
+					window.location.href = elementor.config.tools_page_link + '&redirect_to=' + encodeURIComponent( document.location.href ) + '#tab-fontawesome4_migration';
 				};
 				const enableMigrationDialog = elementor.helpers.getSimpleDialog(
 					'elementor-enable-fa5-dialog',
-					elementor.translate( 'enable_fa5' ),
-					elementor.translate( 'dialog_confirm_enable_fa5' ),
-					elementor.translate( 'update' ),
+					__( 'Elementor\'s New Icon Library', 'elementor' ),
+					__( 'Elementor v2.6 includes an upgrade from Font Awesome 4 to 5. In order to continue using icons, be sure to click "Update".', 'elementor' ) + ' <a href="https://go.elementor.com/fontawesome-migration/" target="_blank">' + __( 'Learn More', 'elementor' ) + '</a>',
+					__( 'Update', 'elementor' ),
 					onConfirm
 				);
 				enableMigrationDialog.show();
@@ -162,12 +170,12 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 		wp.media.view.settings.post.id = elementor.config.document.id;
 		this.frame = wp.media( {
 			button: {
-				text: elementor.translate( 'insert_media' ),
+				text: __( 'Insert Media', 'elementor' ),
 			},
 			library: { type: [ 'image/svg+xml' ] },
 			states: [
 				new wp.media.controller.Library( {
-					title: elementor.translate( 'insert_media' ),
+					title: __( 'Insert Media', 'elementor' ),
 					library: wp.media.query( { type: [ 'image/svg+xml' ] } ),
 					multiple: false,
 					date: false,
@@ -220,32 +228,11 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 		this.trigger( 'after:select' );
 	}
 
-	getSvgNotEnabledDialog() {
-		const onConfirm = () => {
-			elementorCommon.ajax.addRequest( 'enable_svg_uploads', {}, true );
-			this.openFrame();
-		};
-		return elementor.helpers.getSimpleDialog(
-			'elementor-enable-svg-dialog',
-			elementor.translate( 'enable_svg' ),
-			elementor.translate( 'dialog_confirm_enable_svg' ),
-			elementor.translate( 'enable' ),
-			onConfirm
-		);
-	}
-
-	isSvgEnabled() {
-		if ( ! this.cache.enableClicked ) {
-			return this.model.get( 'is_svg_enabled' );
-		}
-		return true;
-	}
-
 	openFrame() {
-		if ( ! this.isSvgEnabled() && ! elementor.iconManager.cache.svgDialogShown ) {
-			const dialog = this.getSvgNotEnabledDialog();
-			elementor.iconManager.cache.svgDialogShown = true;
-			return dialog.show();
+		if ( ! FilesUploadHandler.isUploadEnabled( 'svg' ) ) {
+			FilesUploadHandler.getUnfilteredFilesNotEnabledDialog( () => this.openFrame() ).show();
+
+			return false;
 		}
 
 		if ( ! this.frame ) {
@@ -255,8 +242,7 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 		this.frame.open();
 
 		// Set params to trigger sanitizer
-		this.frame.uploader.uploader.param( 'uploadTypeCaller', 'elementor-editor-upload' );
-		this.frame.uploader.uploader.param( 'upload_type', 'svg-icon' );
+		FilesUploadHandler.setUploadTypeCaller( this.frame );
 
 		const selectedId = this.getControlValue( 'id' );
 		if ( ! selectedId ) {
@@ -275,6 +261,7 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 		const controlValue = this.getControlValue(),
 			skin = this.model.get( 'skin' ),
 			iconContainer = 'inline' === skin ? this.ui.inlineDisplayedIcon : this.ui.previewPlaceholder,
+			disableActiveState = this.model.get( 'disable_initial_active_state' ),
 			defaultIcon = this.model.get( 'default' );
 
 		let iconValue = controlValue.value,
@@ -287,7 +274,9 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 
 		if ( 'media' === skin ) {
 			this.ui.controlMedia.toggleClass( 'elementor-media-empty', ! iconValue );
-		} else {
+		}
+
+		if ( ( 'inline' === skin && ! disableActiveState ) || iconType ) {
 			this.markChecked( iconType );
 		}
 
@@ -325,7 +314,8 @@ class ControlIconsView extends ControlMultipleBaseItemView {
 			// If (1) the control does NOT have a default icon,
 			// OR (2) the control DOES have a default icon BUT the default icon is an SVG,
 			// set the default icon-library label's icon to a simple circle
-			iconContainer.html( '<i class="eicon-circle"></i>' );
+			const skinOptions = this.model.get( 'skin_settings' );
+			iconContainer.html( '<i class="' + skinOptions.inline.icon.icon + '"></i>' );
 		}
 	}
 

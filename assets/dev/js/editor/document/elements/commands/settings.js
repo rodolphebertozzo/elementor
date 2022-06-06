@@ -1,6 +1,6 @@
-import Debounce from '../../commands/base/history/debounce';
+import CommandHistoryDebounce from 'elementor-document/commands/base/command-history-debounce';
 
-export class Settings extends Debounce {
+export class Settings extends CommandHistoryDebounce {
 	/**
 	 * Function getSubTitle().
 	 *
@@ -36,7 +36,7 @@ export class Settings extends Debounce {
 	static restore( historyItem, isRedo ) {
 		const data = historyItem.get( 'data' );
 
-		historyItem.get( 'containers' ).forEach( ( container ) => {
+		historyItem.get( 'containers' ).forEach( ( /* Container */ container ) => {
 			const changes = data.changes[ container.id ];
 
 			$e.run( 'document/elements/settings', {
@@ -70,7 +70,7 @@ export class Settings extends Debounce {
 				restore: Settings.restore,
 			};
 
-		$e.run( 'document/history/add-transaction', historyItem );
+		$e.internal( 'document/history/add-transaction', historyItem );
 	}
 
 	validateArgs( args ) {
@@ -106,7 +106,7 @@ export class Settings extends Debounce {
 			container.oldValues = {};
 
 			// Set oldValues, For each setting is about to change save setting value.
-			Object.entries( newSettings ).forEach( ( [ key, value ] ) => { 	// eslint-disable-line no-unused-vars
+			Object.keys( newSettings ).forEach( ( key ) => {
 				container.oldValues[ key ] = oldSettings[ key ];
 			} );
 
@@ -115,13 +115,11 @@ export class Settings extends Debounce {
 				this.addToHistory( container, newSettings, container.oldValues );
 			}
 
-			if ( options.external ) {
-				container.settings.setExternalChange( newSettings );
-			} else {
-				container.settings.set( newSettings );
-			}
-
-			container.render();
+			$e.internal( 'document/elements/set-settings', {
+				container,
+				options,
+				settings: newSettings,
+			} );
 		} );
 	}
 

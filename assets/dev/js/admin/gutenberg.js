@@ -5,20 +5,18 @@
 	var ElementorGutenbergApp = {
 
 		cacheElements: function() {
-			this.isElementorMode = ElementorGutenbergSettings.isElementorMode;
-
-			this.cache = {};
-
-			this.cache.$gutenberg = $( '#editor' );
-			this.cache.$switchMode = $( $( '#elementor-gutenberg-button-switch-mode' ).html() );
-
-			this.cache.$gutenberg.find( '.edit-post-header-toolbar' ).append( this.cache.$switchMode );
-			this.cache.$switchModeButton = this.cache.$switchMode.find( '#elementor-switch-mode-button' );
-
-			this.toggleStatus();
-			this.buildPanel();
-
 			var self = this;
+
+			self.isElementorMode = ElementorGutenbergSettings.isElementorMode;
+
+			self.cache = {};
+
+			self.cache.$gutenberg = $( '#editor' );
+			self.cache.$switchMode = $( $( '#elementor-gutenberg-button-switch-mode' ).html() );
+			self.cache.$switchModeButton = self.cache.$switchMode.find( '#elementor-switch-mode-button' );
+
+			self.bindEvents();
+			self.toggleStatus();
 
 			wp.data.subscribe( function() {
 				setTimeout( function() {
@@ -30,9 +28,14 @@
 		buildPanel: function() {
 			var self = this;
 
+			if ( ! self.cache.$gutenberg.find( '#elementor-switch-mode' ).length ) {
+				self.cache.$gutenberg.find( '.edit-post-header-toolbar' ).append( self.cache.$switchMode );
+			}
+
 			if ( ! $( '#elementor-editor' ).length ) {
 				self.cache.$editorPanel = $( $( '#elementor-gutenberg-panel' ).html() );
-				self.cache.$gurenbergBlockList = self.cache.$gutenberg.find( '.editor-block-list__layout, .editor-post-text-editor' );
+				// TODO: `editor-block-list__layout` class for WP < 5.3 support.
+				self.cache.$gurenbergBlockList = self.cache.$gutenberg.find( '.editor-block-list__layout, .editor-post-text-editor, .block-editor-block-list__layout' );
 				self.cache.$gurenbergBlockList.after( self.cache.$editorPanel );
 
 				self.cache.$editorPanelButton = self.cache.$editorPanel.find( '#elementor-go-to-edit-page-link' );
@@ -42,12 +45,19 @@
 
 					self.animateLoader();
 
-					var documentTitle = wp.data.select( 'core/editor' ).getEditedPostAttribute( 'title' );
-					if ( ! documentTitle ) {
-						wp.data.dispatch( 'core/editor' ).editPost( { title: 'Elementor #' + $( '#post_ID' ).val() } );
+					// A new post is initialized as an 'auto-draft'.
+					// if the post is not a new post it should not save it to avoid some saving conflict between elementor and gutenberg.
+					const isNewPost = 'auto-draft' === wp.data.select( 'core/editor' ).getCurrentPost().status;
+
+					if ( isNewPost ) {
+						var documentTitle = wp.data.select( 'core/editor' ).getEditedPostAttribute( 'title' );
+						if ( ! documentTitle ) {
+							wp.data.dispatch( 'core/editor' ).editPost( { title: 'Elementor #' + $( '#post_ID' ).val() } );
+						}
+
+						wp.data.dispatch( 'core/editor' ).savePost();
 					}
 
-					wp.data.dispatch( 'core/editor' ).savePost();
 					self.redirectWhenSave();
 				} );
 			}
@@ -59,11 +69,11 @@
 			self.cache.$switchModeButton.on( 'click', function() {
 				if ( self.isElementorMode ) {
 					elementorCommon.dialogsManager.createWidget( 'confirm', {
-						message: elementorAdmin.translate( 'back_to_wordpress_editor_message' ),
-						headerMessage: elementorAdmin.translate( 'back_to_wordpress_editor_header' ),
+						message: __( 'Please note that you are switching to WordPress default editor. Your current layout, design and content might break.', 'elementor' ),
+						headerMessage: __( 'Back to WordPress Editor', 'elementor' ),
 						strings: {
-							confirm: elementorAdmin.translate( 'yes' ),
-							cancel: elementorAdmin.translate( 'cancel' ),
+							confirm: __( 'Continue', 'elementor' ),
+							cancel: __( 'Cancel', 'elementor' ),
 						},
 						defaultOption: 'confirm',
 						onConfirm: function() {
@@ -106,11 +116,7 @@
 		},
 
 		init: function() {
-			var self = this;
-			setTimeout( function() {
-				self.cacheElements();
-				self.bindEvents();
-			}, 1 );
+			this.cacheElements();
 		},
 	};
 

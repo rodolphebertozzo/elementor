@@ -7,14 +7,28 @@ const DEFAULT_INNER_SECTION_COLUMNS = 2,
 	DEFAULT_MAX_COLUMNS = 10;
 
 const SectionView = BaseElementView.extend( {
-	childViewContainer: '> .elementor-container > .elementor-row',
+	childViewContainer: function() {
+		let containerSelector = '> .elementor-container';
+
+		if ( ! elementorCommon.config.experimentalFeatures[ 'e_dom_optimization' ] ) {
+			containerSelector += ' > .elementor-row';
+		}
+
+		return containerSelector;
+	},
 
 	template: Marionette.TemplateCache.get( '#tmpl-elementor-section-content' ),
 
 	addSectionView: null,
 
 	_checkIsFull: function() {
-		// TODO: should be part of $e.events.
+		this.toggleSectionIsFull();
+
+		elementorCommon.helpers.softDeprecated( '_checkIsFull', '2.9.0',
+			'toggleSectionIsFull()' );
+	},
+
+	toggleSectionIsFull: function() {
 		this.$el.toggleClass( 'elementor-section-filled', this.isCollectionFilled() );
 	},
 
@@ -59,6 +73,8 @@ const SectionView = BaseElementView.extend( {
 
 	initialize: function() {
 		BaseElementView.prototype.initialize.apply( this, arguments );
+
+		this.model.get( 'editSettings' ).set( 'defaultEditRoute', 'layout' );
 	},
 
 	getEditButtons: function() {
@@ -67,28 +83,25 @@ const SectionView = BaseElementView.extend( {
 
 		if ( ! this.isInner() ) {
 			editTools.add = {
-				title: elementor.translate( 'add_element', [ elementData.title ] ),
+				/* translators: %s: Element name. */
+				title: sprintf( __( 'Add %s', 'elementor' ), elementData.title ),
 				icon: 'plus',
 			};
 		}
 
 		editTools.edit = {
-			title: elementor.translate( 'edit_element', [ elementData.title ] ),
+			/* translators: %s: Element name. */
+			title: sprintf( __( 'Edit %s', 'elementor' ), elementData.title ),
 			icon: 'handle',
 		};
 
 		if ( elementor.getPreferences( 'edit_buttons' ) ) {
 			editTools.duplicate = {
-				title: elementor.translate( 'duplicate_element', [ elementData.title ] ),
+				/* translators: %s: Element name. */
+				title: sprintf( __( 'Duplicate %s', 'elementor' ), elementData.title ),
 				icon: 'clone',
 			};
 		}
-
-		editTools.remove = {
-			title: elementor.translate( 'delete_element', [ elementData.title ] ),
-			icon: 'close',
-		};
-
 		return editTools;
 	},
 
@@ -101,7 +114,8 @@ const SectionView = BaseElementView.extend( {
 			actions: [
 				{
 					name: 'save',
-					title: elementor.translate( 'save_as_block' ),
+					title: __( 'Save as Template', 'elementor' ),
+					isEnabled: () => ! elementor.selection.isMultiple(),
 					callback: this.save.bind( this ),
 				},
 			],
@@ -114,7 +128,7 @@ const SectionView = BaseElementView.extend( {
 		var sectionConnectClass = this.isInner() ? '.elementor-inner-section' : '.elementor-top-section';
 
 		return {
-			connectWith: sectionConnectClass + ' > .elementor-container > .elementor-row',
+			connectWith: sectionConnectClass + this.childViewContainer(),
 			handle: '> .elementor-element-overlay .elementor-editor-element-edit',
 			items: '> .elementor-column',
 			forcePlaceholderSize: true,
@@ -159,7 +173,7 @@ const SectionView = BaseElementView.extend( {
 		return nextView.getContainer();
 	},
 
-	setStructure: function( structure ) {
+	setStructure: function( structure, shouldAdjustColumns = true ) {
 		const parsedStructure = elementor.presetsFactory.getParsedStructure( structure );
 
 		if ( +parsedStructure.columnsCount !== this.collection.length ) {
@@ -172,7 +186,9 @@ const SectionView = BaseElementView.extend( {
 			options: { external: true },
 		} );
 
-		this.adjustColumns();
+		if ( shouldAdjustColumns ) {
+			this.adjustColumns();
+		}
 	},
 
 	adjustColumns: function() {
@@ -191,8 +207,8 @@ const SectionView = BaseElementView.extend( {
 		} );
 	},
 
-	resetLayout: function() {
-		this.setStructure( this.getDefaultStructure() );
+	resetLayout: function( shouldAdjustColumns = true ) {
+		this.setStructure( this.getDefaultStructure(), shouldAdjustColumns );
 	},
 
 	resetColumnsCustomSize: function() {
@@ -238,7 +254,7 @@ const SectionView = BaseElementView.extend( {
 	onRender: function() {
 		BaseElementView.prototype.onRender.apply( this, arguments );
 
-		this._checkIsFull();
+		this.toggleSectionIsFull();
 	},
 
 	onAddButtonClick: function() {
@@ -260,7 +276,10 @@ const SectionView = BaseElementView.extend( {
 
 		// Delaying the slide down for slow-render browsers (such as FF)
 		setTimeout( function() {
-			addSectionView.$el.slideDown();
+			addSectionView.$el.slideDown( null, function() {
+				// Remove inline style, for preview mode.
+				jQuery( this ).css( 'display', '' );
+			} );
 		} );
 
 		this.addSectionView = addSectionView;

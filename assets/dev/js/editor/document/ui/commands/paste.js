@@ -1,13 +1,12 @@
-import Base from '../../commands/base/base';
-import DocumentUtils from 'elementor-document/utils/helpers';
+import CommandBase from 'elementor-api/modules/command-base';
 
-export class Paste extends Base {
+export class Paste extends CommandBase {
 	initialize( args ) {
 		const { containers = [ args.container ] } = args;
 
 		super.initialize( args );
 
-		this.storage = elementorCommon.storage.get( 'clipboard' );
+		this.storage = elementorCommon.storage.get( 'clipboard' ) || [];
 
 		this.storage = this.storage.map( ( model ) =>
 			new Backbone.Model( model )
@@ -21,13 +20,8 @@ export class Paste extends Base {
 		}
 	}
 
-	validateArgs( args ) {
-		this.requireArgumentType( 'storage', 'object', this );
-		//this.requireArgumentType( 'target', 'array', this );
-	}
-
 	apply( args ) {
-		if ( ! this.target ) {
+		if ( ! this.target || 0 === this.storage.length ) {
 			return false;
 		}
 
@@ -35,7 +29,7 @@ export class Paste extends Base {
 
 		this.target.forEach( ( /* Container */ container ) => {
 			const { options = {} } = args,
-				pasteOptions = DocumentUtils.getPasteOptions( this.storage[ 0 ], container );
+				pasteOptions = $e.components.get( 'document/elements' ).utils.getPasteOptions( this.storage[ 0 ], container );
 
 			if ( ! pasteOptions.isValidChild ) {
 				if ( pasteOptions.isSameElement ) {

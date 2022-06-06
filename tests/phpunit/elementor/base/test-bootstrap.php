@@ -1,26 +1,9 @@
 <?php
 namespace Elementor\Testing;
 
+use ElementorEditorTesting\Elementor_Test_Base;
+
 class Elementor_Test_Bootstrap extends Elementor_Test_Base {
-
-	public static function setUpBeforeClass() {
-		parent::setUpBeforeClass();
-		remove_action( 'admin_init', '_maybe_update_themes' );
-		remove_action( 'admin_init', '_maybe_update_core' );
-		remove_action( 'admin_init', '_maybe_update_plugins' );
-
-		wp_set_current_user( self::factory()->get_administrator_user()->ID );
-
-		// Make sure the main class is running
-		\Elementor\Plugin::instance();
-
-		// Run fake actions
-		do_action( 'init' );
-		do_action( 'plugins_loaded' );
-
-		\Elementor\Plugin::$instance->init_common();
-	}
-
 	public function test_plugin_activated() {
 		$this->assertTrue( is_plugin_active( PLUGIN_PATH ) );
 	}
@@ -29,17 +12,15 @@ class Elementor_Test_Bootstrap extends Elementor_Test_Base {
 		$this->assertInstanceOf( '\Elementor\Plugin', \Elementor\Plugin::$instance );
 	}
 
-	/**
-	 * @expectedIncorrectUsage __clone
-	 */
 	public function test_Clone() {
+		$this->expect_doing_it_wrong('__clone');
+
 		$obj_cloned = clone \Elementor\Plugin::$instance;
 	}
 
-	/**
-	 * @expectedIncorrectUsage __wakeup
-	 */
 	public function test_Wakeup() {
+		$this->expect_doing_it_wrong('__wakeup');
+
 		unserialize( serialize( \Elementor\Plugin::$instance ) );
 	}
 }

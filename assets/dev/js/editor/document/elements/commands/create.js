@@ -1,6 +1,6 @@
-import History from '../../commands/base/history';
+import CommandHistory from 'elementor-document/commands/base/command-history';
 
-export class Create extends History {
+export class Create extends CommandHistory {
 	static restore( historyItem, isRedo ) {
 		const data = historyItem.get( 'data' ),
 			container = historyItem.get( 'container' ),
@@ -45,14 +45,6 @@ export class Create extends History {
 
 		let result = [];
 
-		// BC: Deprecated since 2.8.0 - use `$e.events`.
-		if ( ! options.trigger ) {
-			options.trigger = {
-				beforeAdd: 'element:before:add',
-				afterAdd: 'element:after:add',
-			};
-		}
-
 		containers.forEach( ( container ) => {
 			container = container.lookup();
 
@@ -65,7 +57,7 @@ export class Create extends History {
 			 * in getHistory().
 			 */
 			if ( this.isHistoryActive() ) {
-				$e.run( 'document/history/log-sub-item', {
+				$e.internal( 'document/history/log-sub-item', {
 					container,
 					type: 'sub-add',
 					restore: this.constructor.restore,

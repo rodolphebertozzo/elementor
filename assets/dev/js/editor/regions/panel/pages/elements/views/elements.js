@@ -5,23 +5,38 @@ PanelElementsElementsView = Marionette.CollectionView.extend( {
 
 	id: 'elementor-panel-elements',
 
+	className: 'elementor-responsive-panel',
+
 	initialize: function() {
 		this.listenTo( elementor.channels.panelElements, 'filter:change', this.onFilterChanged );
 	},
 
 	filter: function( childModel ) {
-		var filterValue = elementor.channels.panelElements.request( 'filter:value' );
+		const filterValue = elementor.channels.panelElements.request( 'filter:value' );
 
 		if ( ! filterValue ) {
 			return true;
+		}
+
+		// Prevent from wordpress widgets to show in search result.
+		if ( childModel.get( 'hideOnSearch' ) ) {
+			return false;
 		}
 
 		if ( -1 !== childModel.get( 'title' ).toLowerCase().indexOf( filterValue.toLowerCase() ) ) {
 			return true;
 		}
 
+		// Get the filter input localized value.
+		const localized = elementor.channels.panelElements.request( 'filter:localized' ) || '';
+
 		return _.any( childModel.get( 'keywords' ), function( keyword ) {
-			return ( -1 !== keyword.toLowerCase().indexOf( filterValue.toLowerCase() ) );
+			keyword = keyword.toLowerCase();
+
+			const regularFilter = ( -1 !== keyword.indexOf( filterValue.toLowerCase() ) ),
+				localizedFilter = ( localized && -1 !== keyword.indexOf( localized.toLowerCase() ) );
+
+			return regularFilter || localizedFilter;
 		} );
 	},
 

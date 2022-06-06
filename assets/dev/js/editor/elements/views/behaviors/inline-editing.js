@@ -29,7 +29,7 @@ InlineEditingBehavior = Marionette.Behavior.extend( {
 	startEditing: function( $element ) {
 		if (
 			this.editing ||
-			'edit' !== elementor.channels.dataEditMode.request( 'activeMode' ) ||
+			! this.view.container.isEditable() ||
 			this.view.model.isRemoteRequestActive()
 		) {
 			return;
@@ -89,7 +89,7 @@ InlineEditingBehavior = Marionette.Behavior.extend( {
 			mode: mode,
 			list: 'none' === elementDataToolbar ? [] : inlineEditingConfig.toolbar[ elementDataToolbar || 'basic' ],
 			cleanAttrs: [ 'id', 'class', 'name' ],
-			placeholder: elementor.translate( 'type_here' ) + '...',
+			placeholder: __( 'Type Here', 'elementor' ) + '...',
 			toolbarIconsPrefix: 'eicon-editor-',
 			toolbarIconsDictionary: {
 				externalLink: {
@@ -148,6 +148,15 @@ InlineEditingBehavior = Marionette.Behavior.extend( {
 		this.editor.destroy();
 
 		this.view.allowRender = true;
+
+		/**
+		 * Inline editing has several toolbar types (advanced, basic and none). When editing is stopped,
+		 * we need to rerender the area. To prevent multiple renderings, we will render only areas that
+		 * use advanced toolbars.
+		 */
+		if ( 'advanced' === this.$currentEditingArea.data().elementorInlineEditingToolbar ) {
+			this.view.getEditModel().renderRemoteServer();
+		}
 	},
 
 	onInlineEditingClick: function( event ) {

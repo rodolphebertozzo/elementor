@@ -4,9 +4,9 @@ namespace Elementor\Modules\Usage;
 use Elementor\Core\Base\Document;
 use Elementor\Core\Base\Module as BaseModule;
 use Elementor\Core\DynamicTags\Manager;
-use Elementor\System_Info\Main as System_Info;
-use Elementor\DB;
+use Elementor\Modules\System_Info\Module as System_Info;
 use Elementor\Plugin;
+use Elementor\Tracker;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -136,14 +136,15 @@ class Module extends BaseModule {
 				'count' => $doc_count,
 			];
 
+			// ' ? 1 : 0;' In sorters is compatibility for PHP8.0.
 			// Sort usage by title.
 			uasort( $usage, function( $a, $b ) {
-				return ( $a['title'] > $b['title'] );
+				return ( $a['title'] > $b['title'] ) ? 1 : 0;
 			} );
 
 			// If title includes '-' will have lower priority.
 			uasort( $usage, function( $a ) {
-				return strpos( $a['title'], '-' );
+				return strpos( $a['title'], '-' ) ? 1 : 0;
 			} );
 		}
 
@@ -177,7 +178,7 @@ class Module extends BaseModule {
 	 * @param Document $document
 	 */
 	public function after_document_save( $document ) {
-		if ( DB::STATUS_PUBLISH === $document->get_post()->post_status || DB::STATUS_PRIVATE === $document->get_post()->post_status ) {
+		if ( Document::STATUS_PUBLISH === $document->get_post()->post_status || Document::STATUS_PRIVATE === $document->get_post()->post_status ) {
 			$this->save_document_usage( $document );
 		}
 
@@ -276,6 +277,7 @@ class Module extends BaseModule {
 		$post_types = get_post_types( array( 'public' => true ) );
 
 		$query = new \WP_Query( [
+			'no_found_rows' => true,
 			'meta_key' => '_elementor_data',
 			'post_type' => $post_types,
 			'post_status' => [ 'publish', 'private' ],
@@ -555,19 +557,28 @@ class Module extends BaseModule {
 	 * @param Document $document
 	 */
 	private function save_document_usage( Document $document ) {
-		if ( ! $document::get_property( 'is_editable' ) ) {
+		if ( ! $document::get_property( 'is_editable' ) && ! $document->is_built_with_elementor() ) {
 			return;
 		}
 
 		// Get data manually to avoid conflict with `\Elementor\Core\Base\Document::get_elements_data... convert_to_elementor`.
 		$data = $document->get_json_meta( '_elementor_data' );
 
-		if ( is_array( $data ) ) {
-			$usage = $this->get_elements_usage( $document->get_elements_raw_data( $data ) );
+		if ( ! empty( $data ) ) {
+			try {
+				$usage = $this->get_elements_usage( $document->get_elements_raw_data( $data ) );
 
-			$document->update_meta( self::META_KEY, $usage );
+				$document->update_meta( self::META_KEY, $usage );
 
-			$this->add_to_global( $document->get_name(), $usage );
+				$this->add_to_global( $document->get_name(), $usage );
+			} catch ( \Exception $exception ) {
+				Plugin::$instance->logger->get_logger()->error( $exception->getMessage(), [
+					'document_id' => $document->get_id(),
+					'document_name' => $document->get_name(),
+				] );
+
+				return;
+			};
 		}
 	}
 
@@ -589,6 +600,10 @@ class Module extends BaseModule {
 	 * @access public
 	 */
 	public function __construct() {
+		if ( ! Tracker::is_allow_track() ) {
+			return;
+		}
+
 		add_action( 'transition_post_status', [ $this, 'on_status_change' ], 10, 3 );
 		add_action( 'before_delete_post', [ $this, 'on_before_delete_post' ] );
 

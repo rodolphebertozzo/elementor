@@ -1,6 +1,6 @@
-import History from '../../commands/base/history';
+import CommandHistory from 'elementor-document/commands/base/command-history';
 
-export class Empty extends History {
+export class Empty extends CommandHistory {
 	static restore( historyItem, isRedo ) {
 		if ( isRedo ) {
 			$e.run( 'document/elements/empty', { force: true } );
@@ -10,6 +10,8 @@ export class Empty extends History {
 			if ( data ) {
 				elementor.getPreviewView().addChildModel( data );
 			}
+
+			$e.internal( 'document/save/set-is-modified', { status: true } );
 		}
 	}
 
@@ -17,7 +19,7 @@ export class Empty extends History {
 		if ( args.force ) {
 			return {
 				type: 'remove',
-				title: elementor.translate( 'all_content' ),
+				title: __( 'All Content', 'elementor' ),
 				data: elementor.elements ? elementor.elements.toJSON() : null,
 				restore: this.constructor.restore,
 			};

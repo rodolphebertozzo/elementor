@@ -75,9 +75,24 @@ module.exports = elementorModules.Module.extend( {
 			options.buttons.forEach( function( button ) {
 				toast.addButton( button );
 			} );
+		} else {
+			toast.getElements( 'buttonsWrapper' ).remove();
 		}
 
-		toast.show();
+		if ( options.classes ) {
+			toast.getElements( 'widget' ).addClass( options.classes );
+		}
+
+		if ( options.sticky ) {
+			toast.setSettings( {
+				hide: {
+					auto: false,
+					onClick: false,
+				},
+			} );
+		}
+
+		return toast.show();
 	},
 
 	onInit: function() {

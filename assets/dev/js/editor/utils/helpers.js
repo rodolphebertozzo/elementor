@@ -1,7 +1,34 @@
 import ColorPicker from './color-picker';
+import DocumentHelper from 'elementor-editor/document/helper-bc';
+import ContainerHelper from 'elementor-editor-utils/container-helper';
+
+const allowedHTMLWrapperTags = [
+	'article',
+	'aside',
+	'div',
+	'footer',
+	'h1',
+	'h2',
+	'h3',
+	'h4',
+	'h5',
+	'h6',
+	'header',
+	'main',
+	'nav',
+	'p',
+	'section',
+	'span',
+];
 
 module.exports = {
-	_enqueuedFonts: [],
+	container: ContainerHelper,
+	document: DocumentHelper,
+
+	_enqueuedFonts: {
+		editor: [],
+		preview: [],
+	},
 	_enqueuedIconFonts: [],
 	_inlineSvg: [],
 
@@ -11,7 +38,15 @@ module.exports = {
 				column: {
 					widget: null,
 					section: null,
+					container: {
+						widget: null,
+						container: null,
+					},
 				},
+			},
+			container: {
+				widget: null,
+				container: null,
 			},
 		},
 	},
@@ -25,7 +60,7 @@ module.exports = {
 		}
 
 		if ( ! $document.find( selector ).length ) {
-			$document.find( 'link:last' ).after( link );
+			$document.find( 'link' ).last().after( link );
 		}
 	},
 
@@ -77,7 +112,7 @@ module.exports = {
 	},
 
 	enqueueIconFonts( iconType ) {
-		if ( -1 !== this._enqueuedIconFonts.indexOf( iconType ) || !! ElementorConfig[ 'icons_update_needed' ] ) {
+		if ( -1 !== this._enqueuedIconFonts.indexOf( iconType ) || !! elementor.config[ 'icons_update_needed' ] ) {
 			return;
 		}
 
@@ -175,7 +210,7 @@ module.exports = {
 		const storageKey = 'fa4Tofa5Mapping';
 		let mapping = elementorCommon.storage.get( storageKey );
 		if ( ! mapping ) {
-			jQuery.getJSON( ElementorConfig.fa4_to_fa5_mapping_url, ( data ) => {
+			jQuery.getJSON( elementor.config.fa4_to_fa5_mapping_url, ( data ) => {
 				mapping = data;
 				elementorCommon.storage.set( storageKey, data );
 			} );
@@ -195,8 +230,13 @@ module.exports = {
 		};
 	},
 
-	enqueueFont( font ) {
-		if ( -1 !== this._enqueuedFonts.indexOf( font ) ) {
+	// The target parameter = 'editor'/'preview'. Defaults to 'preview' for backwards compatibility.
+	enqueueFont( font, target = 'preview' ) {
+		if ( $e.devTools ) {
+			$e.devTools.log.info( `enqueueFont font: '${ font }', target: '${ target }'` );
+		}
+
+		if ( -1 !== this._enqueuedFonts[ target ].indexOf( font ) ) {
 			return;
 		}
 
@@ -229,16 +269,24 @@ module.exports = {
 		}
 
 		if ( ! _.isEmpty( fontUrl ) ) {
-			this.enqueuePreviewStylesheet( fontUrl );
+			if ( 'editor' === target ) {
+				// TODO: Find better solution, temporary fix, covering issue: 'fonts does not rendered in global styles'.
+				this.enqueueCSS( fontUrl, elementorCommon.elements.$document );
+			} else {
+				this.enqueueCSS( fontUrl, elementor.$previewContents );
+			}
 		}
 
-		this._enqueuedFonts.push( font );
+		this._enqueuedFonts[ target ].push( font );
 
 		elementor.channels.editor.trigger( 'font:insertion', fontType, font );
 	},
 
 	resetEnqueuedFontsCache() {
-		this._enqueuedFonts = [];
+		this._enqueuedFonts = {
+			editor: [],
+			preview: [],
+		};
 		this._enqueuedIconFonts = [];
 	},
 
@@ -274,7 +322,9 @@ module.exports = {
 	},
 
 	getUniqueID() {
-		return Math.random().toString( 16 ).substr( 2, 7 );
+		elementorCommon.helpers.softDeprecated( 'elementor.helpers.getUniqueID()', '3.0.0', 'elementorCommon.helpers.getUniqueId()' );
+
+		return elementorCommon.helpers.getUniqueId();
 	},
 
 	getSocialNetworkNameFromIcon( iconsControl, fallbackControl, toUpperCase = false, migrated = null, withIcon = false ) {
@@ -316,20 +366,20 @@ module.exports = {
 			},
 			strings: {
 				confirm: confirmString,
-				cancel: elementor.translate( 'cancel' ),
+				cancel: __( 'Cancel', 'elementor' ),
 			},
 			onConfirm: onConfirm,
 		} );
 	},
 
-	maybeDisableWidget() {
-		if ( ! ElementorConfig[ 'icons_update_needed' ] ) {
+	maybeDisableWidget( givenWidgetType = null ) {
+		if ( ! elementor.config[ 'icons_update_needed' ] ) {
 			return false;
 		}
 
 		const elementView = elementor.channels.panelElements.request( 'element:selected' ),
-			widgetType = elementView.model.get( 'widgetType' ),
-			widgetData = elementor.config.widgets[ widgetType ],
+			widgetType = givenWidgetType || elementView.model.get( 'widgetType' ),
+			widgetData = elementor.widgetsCache[ widgetType ],
 			hasControlOfType = ( controls, type ) => {
 				let has = false;
 				jQuery.each( controls, ( controlName, controlData ) => {
@@ -337,7 +387,7 @@ module.exports = {
 						has = true;
 						return false;
 					}
-					if ( 'repeater' === controlData.type ) {
+					if ( controlData.is_repeater ) {
 						has = hasControlOfType( controlData.fields, type );
 						if ( has ) {
 							return false;
@@ -351,13 +401,13 @@ module.exports = {
 			const hasIconsControl = hasControlOfType( widgetData.controls, 'icons' );
 			if ( hasIconsControl ) {
 				const onConfirm = () => {
-					window.location.href = ElementorConfig.tools_page_link + '&redirect_to=' + encodeURIComponent( document.location.href ) + '#tab-fontawesome4_migration';
+					window.location.href = elementor.config.tools_page_link + '&redirect_to=' + encodeURIComponent( document.location.href ) + '#tab-fontawesome4_migration';
 				};
 				elementor.helpers.getSimpleDialog(
 					'elementor-enable-fa5-dialog',
-					elementor.translate( 'enable_fa5' ),
-					elementor.translate( 'dialog_confirm_enable_fa5' ),
-					elementor.translate( 'update' ),
+					__( 'Elementor\'s New Icon Library', 'elementor' ),
+					__( 'Elementor v2.6 includes an upgrade from Font Awesome 4 to 5. In order to continue using icons, be sure to click "Update".', 'elementor' ) + ' <a href="https://go.elementor.com/fontawesome-migration/" target="_blank">' + __( 'Learn More', 'elementor' ) + '</a>',
+					__( 'Update', 'elementor' ),
 					onConfirm
 				).show();
 				return true;
@@ -377,64 +427,46 @@ module.exports = {
 		} );
 	},
 
-	isActiveControl: function( controlModel, values ) {
-		let condition,
-			conditions;
+	isActiveControl: function( controlModel, values, controls ) {
+		const condition = controlModel.condition || controlModel.get?.( 'condition' );
+		let conditions = controlModel.conditions || controlModel.get?.( 'conditions' );
 
-		// TODO: Better way to get this?
-		if ( _.isFunction( controlModel.get ) ) {
-			condition = controlModel.get( 'condition' );
-			conditions = controlModel.get( 'conditions' );
-		} else {
-			condition = controlModel.condition;
-			conditions = controlModel.conditions;
+		// If there is a 'condition' format, convert it to a 'conditions' format.
+		if ( condition ) {
+			const terms = [];
+
+			Object.entries( condition ).forEach( ( [ conditionName, conditionValue ] ) => {
+				// Here we want to convert the 'condition' format to a 'conditions' format. The first step is to
+				// isolate the term from the negative operator if exists. For example, a condition format can look
+				// like 'selected_icon[value]!', so we examine this term with a negative connotation.
+				const conditionNameParts = conditionName.match( /([\w-]+(?:\[[\w-]+])?)?(!?)$/i ),
+					conditionRealName = conditionNameParts[ 1 ],
+					isNegativeCondition = !! conditionNameParts[ 2 ],
+					controlValue = values[ conditionRealName ];
+				let operator;
+
+				if ( Array.isArray( conditionValue ) && conditionValue.length ) {
+					operator = isNegativeCondition ? '!in' : 'in';
+				} else if ( Array.isArray( controlValue ) && controlValue.length ) {
+					operator = isNegativeCondition ? '!contains' : 'contains';
+				} else if ( isNegativeCondition ) {
+					operator = '!==';
+				}
+
+				terms.push( {
+					name: conditionRealName,
+					operator: operator,
+					value: conditionValue,
+				} );
+			} );
+
+			conditions = {
+				relation: 'and',
+				terms: conditions ? terms.concat( conditions ) : terms,
+			};
 		}
 
-		// Multiple conditions with relations.
-		if ( conditions && ! elementor.conditions.check( conditions, values ) ) {
-			return false;
-		}
-
-		if ( _.isEmpty( condition ) ) {
-			return true;
-		}
-
-		var hasFields = _.filter( condition, function( conditionValue, conditionName ) {
-			var conditionNameParts = conditionName.match( /([a-z_\-0-9]+)(?:\[([a-z_]+)])?(!?)$/i ),
-				conditionRealName = conditionNameParts[ 1 ],
-				conditionSubKey = conditionNameParts[ 2 ],
-				isNegativeCondition = !! conditionNameParts[ 3 ],
-				controlValue = values[ conditionRealName ];
-
-			if ( values.__dynamic__ && values.__dynamic__[ conditionRealName ] ) {
-				controlValue = values.__dynamic__[ conditionRealName ];
-			}
-
-			if ( undefined === controlValue ) {
-				return true;
-			}
-
-			if ( conditionSubKey && 'object' === typeof controlValue ) {
-				controlValue = controlValue[ conditionSubKey ];
-			}
-
-			// If it's a non empty array - check if the conditionValue contains the controlValue,
-			// If the controlValue is a non empty array - check if the controlValue contains the conditionValue
-			// otherwise check if they are equal. ( and give the ability to check if the value is an empty array )
-			var isContains;
-
-			if ( _.isArray( conditionValue ) && ! _.isEmpty( conditionValue ) ) {
-				isContains = _.contains( conditionValue, controlValue );
-			} else if ( _.isArray( controlValue ) && ! _.isEmpty( controlValue ) ) {
-				isContains = _.contains( controlValue, conditionValue );
-			} else {
-				isContains = _.isEqual( conditionValue, controlValue );
-			}
-
-			return isNegativeCondition ? isContains : ! isContains;
-		} );
-
-		return _.isEmpty( hasFields );
+		return ! ( conditions && ! elementor.conditions.check( conditions, values, controls ) );
 	},
 
 	cloneObject( object ) {
@@ -616,5 +648,22 @@ module.exports = {
 		}
 
 		return result;
+	},
+
+	hasPro() {
+		return !! window.elementorPro;
+	},
+
+	/**
+	 * Function validateHTMLTag().
+	 *
+	 * Validate an HTML tag against a safe allowed list.
+	 *
+	 * @param {string} tag
+	 *
+	 * @returns {string}
+	 */
+	validateHTMLTag( tag ) {
+		return allowedHTMLWrapperTags.includes( tag.toLowerCase() ) ? tag : 'div';
 	},
 };

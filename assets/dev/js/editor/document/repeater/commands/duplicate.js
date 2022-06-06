@@ -1,6 +1,6 @@
-import History from '../../commands/base/history';
+import CommandHistory from 'elementor-document/commands/base/command-history';
 
-export class Duplicate extends History {
+export class Duplicate extends CommandHistory {
 	validateArgs( args ) {
 		this.requireContainer( args );
 
@@ -14,7 +14,7 @@ export class Duplicate extends History {
 		return {
 			containers,
 			type: 'duplicate',
-			subTitle: elementor.translate( 'Item' ),
+			subTitle: __( 'Item', 'elementor' ),
 		};
 	}
 

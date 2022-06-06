@@ -10,15 +10,35 @@ export default class Helpers {
 	}
 
 	deprecatedMessage( type, name, version, replacement ) {
-		let message = `%c   %c\`${ name }\` is ${ type } deprecated since ${ version }`;
-
-		const style = `font-size: 12px; background-image: url("${ elementorCommon.config.urls.assets }images/logo-icon.png"); background-repeat: no-repeat; background-size: contain;`;
+		let message = `\`${ name }\` is ${ type } deprecated since ${ version }`;
 
 		if ( replacement ) {
 			message += ` - Use \`${ replacement }\` instead`;
 		}
 
-		console.warn( message, style, '' ); // eslint-disable-line no-console
+		this.consoleWarn( message );
+	}
+
+	consoleWarn( ...args ) {
+		const style = `font-size: 12px; background-image: url("${ elementorCommon.config.urls.assets }images/logo-icon.png"); background-repeat: no-repeat; background-size: contain;`;
+
+		args.unshift( '%c  %c', style, '' );
+
+		console.warn( ...args ); // eslint-disable-line no-console
+	}
+
+	consoleError( message ) {
+		// TODO: function is part of $e.
+		// Show an error if devTools is available.
+		if ( $e.devTools ) {
+			$e.devTools.log.error( message );
+		}
+
+		// If not a 'Hook-Break' then show error.
+		if ( ! ( message instanceof $e.modules.HookBreak ) ) {
+			// eslint-disable-next-line no-console
+			console.error( message );
+		}
 	}
 
 	deprecatedMethod( methodName, version, replacement ) {
@@ -36,5 +56,9 @@ export default class Helpers {
 		return ( string + '' ).replace( /^(.)|\s+(.)/g, function( $1 ) {
 			return $1.toUpperCase();
 		} );
+	}
+
+	getUniqueId() {
+		return Math.random().toString( 16 ).substr( 2, 7 );
 	}
 }
