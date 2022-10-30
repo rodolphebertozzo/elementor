@@ -155,8 +155,14 @@ class Element_Column extends Element_Base {
 			[
 				'label' => esc_html__( 'Column Width', 'elementor' ) . ' (%)',
 				'type' => Controls_Manager::NUMBER,
-				'min' => 2,
-				'max' => 98,
+				'size_units' => [ 'px', '%', 'em', 'rem' ],
+					'range' => [
+					'%' => [
+						'min' => 2,
+						'max' => 98,
+					],
+				],
+
 				'required' => true,
 				'device_args' => $inline_size_device_args,
 				'min_affected_device' => [
