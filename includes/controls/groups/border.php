@@ -70,6 +70,7 @@ class Group_Control_Border extends Group_Control_Base {
 			],
 			'selectors' => [
 				'{{SELECTOR}}' => 'border-style: {{VALUE}};',
+			'responsive' => true,
 			],
 		];
 
@@ -93,6 +94,7 @@ class Group_Control_Border extends Group_Control_Base {
 			'selectors' => [
 				'{{SELECTOR}}' => 'border-color: {{VALUE}};',
 			],
+			'responsive' => true,
 			'condition' => [
 				'border!' => [ '', 'none' ],
 			],
